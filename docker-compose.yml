@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: user_age_api_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: user_age_api
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d user_age_api"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: user_age_api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_PORT: "8080"
+      APP_ENV: "production"
+      DATABASE_URL: "postgres://postgres:postgres@db:5432/user_age_api?sslmode=disable"
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:
